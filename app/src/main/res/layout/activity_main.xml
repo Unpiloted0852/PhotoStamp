@@ -99,7 +99,7 @@
                         android:layout_marginTop="10dp"
                         android:text="When the phone camera is opened" android:checked="true" />
                     <TextView style="@style/HelperText"
-                        android:text="Detects the phone's own camera — not Canon Camera Connect (Wi-Fi). Most reliable with Usage access granted below: the watcher then also spots your camera app directly, catching sessions the system event can miss." />
+                        android:text="Detects the phone's own camera — not a camera's Wi-Fi transfer app. Most reliable with Usage access granted below: the watcher then also spots your camera app directly, catching sessions the system event can miss." />
 
                     <TextView style="@style/FieldLabel" android:text="When a chosen app is in front" />
                     <TextView android:id="@+id/tvUsageStatus"

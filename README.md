@@ -1,11 +1,11 @@
 # PhotoStamp
 
-Android app that auto-stamps photos transferred from a Canon camera (via Canon
-Camera Connect) with date/time, location, barometric elevation, and configurable
+Android app that auto-stamps photos transferred from a camera to the phone
+(e.g. via the camera maker's Wi-Fi/Bluetooth app) with date/time, location, barometric elevation, and configurable
 METAR-derived weather fields — burned onto a full-quality copy.
 
 ## How it works
-1. Canon Camera Connect transfers photos to the phone as usual.
+1. The camera's companion app transfers photos to the phone as usual.
 2. A foreground service logs phone **GPS position, barometric pressure, and
    ground speed** at 1 Hz and polls **METAR** (~every 5 min) into in-memory
    ring buffers (nothing is written to disk except the stamped photos).
@@ -19,7 +19,7 @@ The stamp only ever shows real data, sourced honestly:
   camera's wall-clock digits verbatim. UTC/Zulu mode converts using the camera's
   `OffsetTimeOriginal` if it recorded one, otherwise the phone's time zone.
 - **Coordinates / altitude** — the camera's own GPS EXIF if present; otherwise the
-  co-located phone's GPS (the normal case for a Canon without a GPS unit).
+  co-located phone's GPS (the normal case for a camera without GPS).
 - **Elevation (MSL)** — barometric: phone pressure + METAR QNH (or a manual QNH).
 - **Heading / pitch / roll / yaw** — **camera metadata only**
   (`GPSImgDirection`; XMP gimbal/pose tags). A bare camera that doesn't record
@@ -46,7 +46,7 @@ Any field whose source has no data is omitted silently.
 - **Replace originals**: overwrites the source file in place. Requires All-files
   access (you'll be prompted). The unstamped original is not kept.
 - Either way, **all standard EXIF is preserved** and our additions (GPS, orientation
-  normalized, UserComment) are written. Note: Canon maker notes are proprietary and
+  normalized, UserComment) are written. Note: manufacturer maker notes are proprietary and
   cannot survive an Android re-encode; standard EXIF tags are carried over.
 
 ## Important assumptions / caveats

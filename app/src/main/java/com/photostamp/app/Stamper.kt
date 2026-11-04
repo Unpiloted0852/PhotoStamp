@@ -45,7 +45,7 @@ object Stamper {
      * is written into [destRelativePath] (the source's folder). Returns the
      * resulting Uri, or null on failure.
      *
-     * Note: maker notes (Canon-proprietary) are not carried by ExifInterface and
+     * Note: maker notes (manufacturer-proprietary) are not carried by ExifInterface and
      * cannot survive a re-encode; standard EXIF tags are preserved.
      */
     fun stamp(
