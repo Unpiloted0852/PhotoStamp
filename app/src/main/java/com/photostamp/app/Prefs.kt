@@ -12,23 +12,40 @@ class Prefs(context: Context) {
     private fun setI(k: String, v: Int) { sp.edit().putInt(k, v).apply() }
     private fun s(k: String, d: String) = sp.getString(k, d) ?: d
     private fun setS(k: String, v: String) { sp.edit().putString(k, v).apply() }
+    private fun csvSet(k: String): Set<String> =
+        s(k, "").split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
 
-    // --- watcher / METAR source ---
+    var onboarded: Boolean get() = b("onboarded", false); set(v) = setB("onboarded", v)
+
+    // --- capture source / matching ---
     var bucketFilter: String get() = s("bucket", ""); set(v) = setS("bucket", v)
+    var maxGapSec: Int get() = i("maxGap", 30); set(v) = setI("maxGap", v)
+    /** Camera clock minus phone clock, in seconds (positive = camera is ahead). */
+    var clockOffsetSec: Int get() = i("clockOffset", 0); set(v) = setI("clockOffset", v)
+    /** Only stamp photos whose capture time matches logged phone data. */
+    var requireMatch: Boolean get() = b("requireMatch", true); set(v) = setB("requireMatch", v)
+
+    // --- METAR ---
     var useMetar: Boolean get() = b("useMetar", true); set(v) = setB("useMetar", v)
     var manualQnh: Double
         get() = sp.getFloat("qnh", Float.NaN).toDouble()
         set(v) { sp.edit().putFloat("qnh", v.toFloat()).apply() }
     var qnhUnit: String get() = s("qnhUnit", "hpa"); set(v) = setS("qnhUnit", v)
-    var maxGapSec: Int get() = i("maxGap", 30); set(v) = setI("maxGap", v)
-    var lastProcessedId: Long
-        get() = sp.getLong("lastId", 0L)
-        set(v) { sp.edit().putLong("lastId", v).apply() }
+
+    // --- photo scanning state ---
+    /** DATE_ADDED (epoch s) from which unprocessed photos are still picked up. */
+    var scanFromSec: Long
+        get() = sp.getLong("scanFrom", 0L)
+        set(v) { sp.edit().putLong("scanFrom", v).apply() }
+    /** Recently handled MediaStore ids as "id:dateAddedSec", so nothing is stamped twice. */
+    var doneIds: Set<String>
+        get() = sp.getStringSet("doneIds", emptySet()) ?: emptySet()
+        set(v) { sp.edit().putStringSet("doneIds", v).apply() }
 
     // --- output handling ---
     var replaceOriginal: Boolean get() = b("replace", false); set(v) = setB("replace", v)
 
-    // --- logging lifecycle (true between user Start and user Stop) ---
+    // --- logging lifecycle (true between Start and Stop) ---
     var loggingDesired: Boolean get() = b("logDesired", false); set(v) = setB("logDesired", v)
     var loggingAuto: Boolean    get() = b("logAuto", false);    set(v) = setB("logAuto", v)
 
@@ -36,14 +53,17 @@ class Prefs(context: Context) {
     var autoStartEnabled: Boolean get() = b("auto_en", false); set(v) = setB("auto_en", v)
     var triggerCamera: Boolean    get() = b("auto_cam", true);  set(v) = setB("auto_cam", v)
     var triggerAppsCsv: String    get() = s("auto_apps", "");   set(v) = setS("auto_apps", v)
+    var triggerBtCsv: String      get() = s("auto_bt", "");     set(v) = setS("auto_bt", v)
     var lingerSec: Int            get() = i("auto_linger", 120); set(v) = setI("auto_linger", v)
-    val triggerApps: Set<String>
-        get() = triggerAppsCsv.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+    val triggerApps: Set<String> get() = csvSet("auto_apps")
+    val triggerBt: Set<String> get() = csvSet("auto_bt")
 
     // --- stamp appearance ---
     var stampSizePct: Int get() = i("st_size", 100); set(v) = setI("st_size", v)
     var stampFont: Int     get() = i("st_font", 0);  set(v) = setI("st_font", v)
     var stampBold: Boolean get() = b("st_bold", false); set(v) = setB("st_bold", v)
+    var stampCorner: Int   get() = i("st_corner", 0); set(v) = setI("st_corner", v)
+    var stampBackdrop: Int get() = i("st_backdrop", 0); set(v) = setI("st_backdrop", v)
 
     // --- stamp contents ---
     var showDateTime: Boolean  get() = b("f_dt", true);  set(v) = setB("f_dt", v)

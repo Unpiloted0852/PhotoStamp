@@ -23,6 +23,7 @@ object MetarLog {
     }
 
     fun clear() = synchronized(lock) { buf.clear() }
+    fun latest(): MetarSample? = synchronized(lock) { buf.lastOrNull() }
 
     /** Closest reading to [whenMs], or null if none within [maxGapMs]. */
     fun nearest(whenMs: Long, maxGapMs: Long): MetarSample? = synchronized(lock) {

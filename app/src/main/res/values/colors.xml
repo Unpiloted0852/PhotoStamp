@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="brand">#2E6BE6</color>
-    <color name="brand_dark">#1B4DB3</color>
-    <color name="accent">#00B5AD</color>
-    <color name="on_brand">#FFFFFF</color>
+    <!-- Fallback palette (Android 11 and older; newer phones use wallpaper colours). -->
+    <color name="brand">#0E5A8A</color>
+    <color name="brand_container">#CDE5FF</color>
+    <color name="on_brand_container">#001D32</color>
+    <color name="accent">#00897B</color>
+    <color name="icon_bg">#0E5A8A</color>
 
+    <color name="ok">#2E7D32</color>
+    <color name="warn">#C25B12</color>
+    <color name="live">#43A047</color>
     <color name="preview_bg">#1B1F24</color>
-    <color name="warn">#C2664D</color>
 </resources>

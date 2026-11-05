@@ -23,24 +23,39 @@ object ForegroundAppMonitor {
         false
     }
 
-    /** Package name most recently moved to the foreground in the last ~10 s, or null. */
-    fun currentForegroundPackage(ctx: Context): String? {
-        return try {
-            val usm = ctx.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-            val now = System.currentTimeMillis()
-            val events = usm.queryEvents(now - 10_000, now)
-            val e = UsageEvents.Event()
-            var pkg: String? = null
-            while (events.hasNextEvent()) {
-                events.getNextEvent(e)
-                val resumed = e.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND ||
-                    (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-                        e.eventType == UsageEvents.Event.ACTIVITY_RESUMED)
-                if (resumed) pkg = e.packageName
-            }
-            pkg
-        } catch (e: Exception) {
-            null
+    /**
+     * Tracks which app is in front by replaying usage events incrementally. The
+     * latest resume event names the foreground app for as long as it stays there,
+     * so a long session in one app keeps counting (a fixed look-back window would
+     * forget it once that app stopped generating events).
+     */
+    class Tracker(private val ctx: Context) {
+        private var lastQueryMs = 0L
+        var current: String? = null
+            private set
+
+        fun poll(): String? {
+            try {
+                val usm = ctx.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+                val now = System.currentTimeMillis()
+                val from = if (lastQueryMs == 0L) now - 6 * 3600_000L else lastQueryMs - 2000
+                val events = usm.queryEvents(from, now)
+                val e = UsageEvents.Event()
+                while (events.hasNextEvent()) {
+                    events.getNextEvent(e)
+                    @Suppress("DEPRECATION")
+                    val resumed = e.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND ||
+                        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                            e.eventType == UsageEvents.Event.ACTIVITY_RESUMED)
+                    val screenGone = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+                        (e.eventType == UsageEvents.Event.SCREEN_NON_INTERACTIVE ||
+                            e.eventType == UsageEvents.Event.KEYGUARD_SHOWN)
+                    if (resumed) current = e.packageName
+                    else if (screenGone) current = null
+                }
+                lastQueryMs = now
+            } catch (_: Exception) { }
+            return current
         }
     }
 

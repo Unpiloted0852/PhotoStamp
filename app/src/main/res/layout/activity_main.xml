@@ -5,338 +5,548 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.google.android.material.appbar.AppBarLayout
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="?attr/actionBarSize"
+        app:title="PhotoStamp"
+        app:titleTextAppearance="?attr/textAppearanceTitleLarge" />
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            style="@style/Toolbar.PhotoStamp"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="PhotoStamp"
-            app:subtitle="Auto stamp camera photos" />
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <ScrollView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true">
+        android:layout_weight="1">
 
-        <LinearLayout
+        <!-- ================================ STATUS ================================ -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/pageStatus"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="28dp">
+            android:layout_height="match_parent">
 
-            <!-- ============ STATUS / CONTROL ============ -->
-            <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
-                <LinearLayout style="@style/CardBody">
-
-                    <TextView style="@style/SectionTitle" android:text="Logging" />
-
-                    <TextView android:id="@+id/status"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:textSize="15sp" android:text="Stopped" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnToggle"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="Start logging"
-                        app:cornerRadius="12dp" />
-
-                    <TextView style="@style/FieldLabel" android:text="Activity" />
-                    <TextView android:id="@+id/log"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:fontFamily="monospace" android:textSize="11sp"
-                        android:maxLines="8" android:paddingTop="4dp"
-                        android:textColor="?android:attr/textColorSecondary" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ============ RELIABILITY ============ -->
-            <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
-                <LinearLayout style="@style/CardBody">
-
-                    <TextView style="@style/SectionTitle" android:text="Background reliability" />
-                    <TextView
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"
-                        android:text="For long sessions, exempt PhotoStamp from battery optimisation so Android won't pause it. The service also restarts itself if it's ever stopped before you press Stop." />
-
-                    <TextView android:id="@+id/tvBatteryStatus"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:paddingTop="10dp" android:textSize="13sp"
-                        android:text="Battery optimisation: unknown" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnBattery"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Allow unrestricted background" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ============ AUTO-START ============ -->
-            <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
-                <LinearLayout style="@style/CardBody">
-
-                    <TextView style="@style/SectionTitle" android:text="Auto-start logging" />
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/swAutoStart"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="Start logging automatically on a trigger" />
-                    <TextView style="@style/HelperText"
-                        android:text="A small watcher runs so logging can start on its own. Logging it auto-starts is also auto-stopped after the linger below; logging you start by hand is left alone." />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/cbTriggerCamera"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:text="When the phone camera is opened" android:checked="true" />
-                    <TextView style="@style/HelperText"
-                        android:text="Detects the phone's own camera — not a camera's Wi-Fi transfer app. Most reliable with Usage access granted below: the watcher then also spots your camera app directly, catching sessions the system event can miss." />
-
-                    <TextView style="@style/FieldLabel" android:text="When a chosen app is in front" />
-                    <TextView android:id="@+id/tvUsageStatus"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:textSize="13sp" android:text="Usage access: needed for app triggers" />
-                    <LinearLayout
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:orientation="horizontal" android:paddingTop="6dp">
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnUsageAccess"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp" android:layout_weight="1"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="6dp"
-                            android:text="Usage access" />
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnPickApps"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp" android:layout_weight="1"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="Choose apps" />
-                    </LinearLayout>
-                    <TextView android:id="@+id/tvTriggerApps"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:paddingTop="6dp" android:textSize="13sp"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:text="No trigger apps selected" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:hint="Keep logging after trigger clears (seconds)">
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etLinger"
-                            android:layout_width="match_parent" android:layout_height="wrap_content"
-                            android:inputType="number" android:maxLines="1" />
-                    </com.google.android.material.textfield.TextInputLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ============ CAPTURE SOURCE ============ -->
-            <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
-                <LinearLayout style="@style/CardBody">
-
-                    <TextView style="@style/SectionTitle" android:text="Capture source" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:hint="Folder filter (optional, e.g. Camera)">
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etBucket"
-                            android:layout_width="match_parent" android:layout_height="wrap_content"
-                            android:inputType="text" android:maxLines="1" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:hint="Max time gap to a sensor reading (seconds)">
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etGap"
-                            android:layout_width="match_parent" android:layout_height="wrap_content"
-                            android:inputType="number" android:maxLines="1" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/cbMetar"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Fetch METAR (QNH + weather)" android:checked="true" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:hint="Manual QNH (used only if no METAR)">
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etQnh"
-                            android:layout_width="match_parent" android:layout_height="wrap_content"
-                            android:inputType="numberDecimal" android:maxLines="1" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <TextView style="@style/FieldLabel" android:text="Manual QNH unit" />
-                    <RadioGroup android:id="@+id/rgQnh"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-                        <RadioButton android:id="@+id/rbHpa"
-                            android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="hPa" android:checked="true" />
-                        <RadioButton android:id="@+id/rbInhg"
-                            android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp" android:text="inHg" />
-                    </RadioGroup>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ============ OUTPUT ============ -->
-            <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
-                <LinearLayout style="@style/CardBody">
-
-                    <TextView style="@style/SectionTitle" android:text="Output" />
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/cbReplace"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="Replace originals (don't keep unstamped copies)" />
-                    <TextView style="@style/HelperText"
-                        android:text="Overwrites the source file in place. Needs All-files access; you'll be asked to grant it." />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ============ STAMP APPEARANCE ============ -->
-            <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
-                <LinearLayout style="@style/CardBody">
-
-                    <TextView style="@style/SectionTitle" android:text="Stamp appearance" />
-
-                    <TextView style="@style/FieldLabel" android:text="Preview" />
-                    <TextView android:id="@+id/tvPreview"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:background="@color/preview_bg"
-                        android:padding="16dp"
-                        android:gravity="end"
-                        android:textColor="#FFFFFF"
-                        android:fontFamily="monospace"
-                        android:lineSpacingMultiplier="1.15"
-                        android:shadowColor="#CC000000"
-                        android:shadowDx="0" android:shadowDy="0" android:shadowRadius="3"
-                        android:text="2026-06-24 14:32 PDT\n37.7749°N  122.4194°W\nELEV 86 m (282 ft) MSL\n18°C  RH 63%  WIND 270°@8 kt\nKSFO QNH 1013 hPa" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:orientation="horizontal" android:paddingTop="14dp">
-                        <TextView style="@style/FieldLabel"
-                            android:layout_width="0dp" android:layout_weight="1"
-                            android:paddingTop="0dp" android:text="Size" />
-                        <TextView android:id="@+id/tvSizeValue"
-                            android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:textStyle="bold" android:text="100%" />
-                    </LinearLayout>
-                    <com.google.android.material.slider.Slider
-                        android:id="@+id/sliderSize"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:valueFrom="50" android:valueTo="200"
-                        android:stepSize="5" android:value="100" />
-
-                    <TextView style="@style/FieldLabel" android:text="Font" />
-                    <Spinner android:id="@+id/spFont"
-                        android:layout_width="match_parent" android:layout_height="wrap_content" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/swBold"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Bold text" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ============ STAMP FIELDS ============ -->
-            <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
-                <LinearLayout style="@style/CardBody">
-
-                    <TextView style="@style/SectionTitle" android:text="Stamp fields" />
-
-                    <TextView style="@style/SubHeader" android:text="Date &amp; time" />
-                    <CheckBox android:id="@+id/cbDateTime" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Date &amp; time" android:checked="true" />
-                    <Spinner android:id="@+id/spDateStyle" style="@style/Indented"
-                        android:layout_width="match_parent" android:layout_height="wrap_content" />
-                    <Spinner android:id="@+id/spTz" style="@style/Indented"
-                        android:layout_width="match_parent" android:layout_height="wrap_content" />
-                    <CheckBox android:id="@+id/cbHour12" style="@style/Indented"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="12-hour clock (else 24-hour)" />
-                    <CheckBox android:id="@+id/cbSeconds" style="@style/Indented"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="Show seconds" />
-
-                    <TextView style="@style/SubHeader" android:text="Position" />
-                    <CheckBox android:id="@+id/cbCoords" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Coordinates" android:checked="true" />
-                    <Spinner android:id="@+id/spCoordFmt" style="@style/Indented"
-                        android:layout_width="match_parent" android:layout_height="wrap_content" />
-                    <CheckBox android:id="@+id/cbElevation" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Elevation (MSL, barometric)" android:checked="true" />
-                    <CheckBox android:id="@+id/cbDensityAlt" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Density altitude" />
-                    <CheckBox android:id="@+id/cbQnh" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="QNH + airport (microstamp)" android:checked="true" />
-
-                    <TextView style="@style/SubHeader" android:text="Motion &amp; orientation" />
-                    <CheckBox android:id="@+id/cbSpeed" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Ground speed (GPS)" />
-                    <Spinner android:id="@+id/spSpeedUnit" style="@style/Indented"
-                        android:layout_width="match_parent" android:layout_height="wrap_content" />
-                    <CheckBox android:id="@+id/cbHeading" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Compass heading (camera only)" />
-                    <CheckBox android:id="@+id/cbAttitude" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Pitch / roll / yaw (camera only)" />
-
-                    <TextView style="@style/SubHeader" android:text="Weather (METAR)" />
-                    <CheckBox android:id="@+id/cbTemp" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Temperature" />
-                    <CheckBox android:id="@+id/cbTempF" style="@style/Indented"
-                        android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="Fahrenheit (else Celsius)" />
-                    <CheckBox android:id="@+id/cbDewpoint" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Dew point" />
-                    <CheckBox android:id="@+id/cbHumidity" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Relative humidity" />
-                    <CheckBox android:id="@+id/cbWind" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Wind" />
-                    <Spinner android:id="@+id/spWindUnit" style="@style/Indented"
-                        android:layout_width="match_parent" android:layout_height="wrap_content" />
-                    <CheckBox android:id="@+id/cbVisibility" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Visibility" />
-                    <CheckBox android:id="@+id/cbClouds" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Cloud cover" />
-
-                    <TextView style="@style/SubHeader" android:text="Metadata" />
-                    <CheckBox android:id="@+id/cbMetaMetar" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="Save full METAR to photo metadata" />
-
-                    <TextView style="@style/HelperText" android:paddingTop="10dp"
-                        android:text="Heading and pitch/roll/yaw come only from the camera's own metadata. METAR fields are skipped if no report under 75 min old is available." />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSave"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp"
-                android:layout_marginTop="16dp"
-                android:text="Save settings"
-                app:cornerRadius="12dp" />
-        </LinearLayout>
-    </ScrollView>
+                android:orientation="vertical"
+                android:paddingBottom="24dp">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardHero"
+                    style="@style/Card.PhotoStamp"
+                    android:layout_marginTop="4dp"
+                    app:cardBackgroundColor="?attr/colorPrimaryContainer">
+
+                    <LinearLayout style="@style/CardBody" android:padding="20dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <View
+                                android:id="@+id/stateDot"
+                                android:layout_width="12dp"
+                                android:layout_height="12dp"
+                                android:layout_marginEnd="10dp"
+                                android:background="@drawable/dot" />
+                            <TextView
+                                android:id="@+id/tvState"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Idle"
+                                android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                                android:textColor="?attr/colorOnPrimaryContainer" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvStateDetail"
+                            style="@style/Body"
+                            android:layout_marginTop="4dp"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:text="Not logging" />
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/chips"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            app:chipSpacingVertical="0dp">
+                            <com.google.android.material.chip.Chip android:id="@+id/chipGps" style="@style/Chip.Live" android:text="GPS" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chipBaro" style="@style/Chip.Live" android:text="Pressure" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chipMetar" style="@style/Chip.Live" android:text="METAR" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chipSamples" style="@style/Chip.Live" android:text="0 samples" />
+                        </com.google.android.material.chip.ChipGroup>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnToggle"
+                            android:layout_width="match_parent"
+                            android:layout_height="64dp"
+                            android:layout_marginTop="12dp"
+                            android:text="Start logging"
+                            android:textAppearance="?attr/textAppearanceTitleMedium"
+                            app:icon="@drawable/ic_play"
+                            app:iconGravity="textStart" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/swAutoStart"
+                            style="@style/Toggle"
+                            android:layout_marginTop="12dp"
+                            android:text="Auto-start on triggers"
+                            android:textColor="?attr/colorOnPrimaryContainer" />
+                        <TextView
+                            android:id="@+id/tvAutoSummary"
+                            style="@style/HelperText"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:text="Off" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardSetup"
+                    style="@style/Card.PhotoStamp">
+                    <LinearLayout style="@style/CardBody">
+                        <TextView android:id="@+id/tvSetupTitle" style="@style/SectionTitle" android:text="Setup" />
+                        <TextView android:id="@+id/tvSetupIntro" style="@style/HelperText"
+                            android:text="These let PhotoStamp run unattended in the background." />
+                        <LinearLayout
+                            android:id="@+id/setupList"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:paddingTop="4dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
+                    <LinearLayout style="@style/CardBody">
+                        <TextView style="@style/SectionTitle" android:text="Photos" />
+                        <TextView android:id="@+id/tvStampStats" style="@style/Body" android:text="No photos stamped yet" />
+                        <TextView android:id="@+id/tvWatching" style="@style/HelperText"
+                            android:paddingTop="4dp" android:text="" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnStampPick"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="Stamp photos now…"
+                            app:icon="@drawable/ic_add_photo" />
+                        <TextView style="@style/HelperText"
+                            android:text="Stamps chosen photos with whatever is known for them (logged data if it covers their capture time)." />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardUpdates"
+                    style="@style/Card.PhotoStamp">
+                    <LinearLayout style="@style/CardBody">
+                        <TextView style="@style/SectionTitle" android:text="Updates" />
+                        <TextView android:id="@+id/tvUpdate" style="@style/Body" android:text="Version" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnUpdate"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Check for updates" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/swAutoCheck"
+                            style="@style/Toggle"
+                            android:text="Check for new releases automatically" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/swAutoInstall"
+                            style="@style/Toggle"
+                            android:text="Install them by themselves when not logging" />
+                        <TextView style="@style/HelperText"
+                            android:text="New versions come from the PhotoStamp releases on GitHub. Android asks you to confirm the first update; after that, updates can install without a tap." />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
+                    <LinearLayout style="@style/CardBody">
+                        <TextView style="@style/SectionTitle" android:text="Activity" />
+                        <TextView
+                            android:id="@+id/tvLog"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="monospace"
+                            android:paddingTop="4dp"
+                            android:text="Nothing yet"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textIsSelectable="true"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <!-- ================================ TRIGGERS ================================ -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/pageTriggers"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="24dp">
+
+                <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp" android:layout_marginTop="4dp">
+                    <LinearLayout style="@style/CardBody">
+                        <TextView style="@style/SectionTitle" android:text="Start logging when…" />
+                        <TextView style="@style/HelperText"
+                            android:text="With auto-start on, any of these starts logging. It stops by itself once they have all cleared for the linger time. Logging you start by hand keeps going until you stop it." />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/swTriggerCamera"
+                            style="@style/Toggle"
+                            android:layout_marginTop="12dp"
+                            android:text="The phone camera opens" />
+                        <TextView style="@style/HelperText"
+                            android:text="Any camera app. Face unlock is ignored." />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+                                <TextView style="@style/Body" android:text="An app is in front" />
+                                <TextView android:id="@+id/tvTriggerApps" style="@style/HelperText" android:text="None chosen" />
+                            </LinearLayout>
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnPickApps"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Choose" />
+                        </LinearLayout>
+                        <TextView style="@style/HelperText"
+                            android:text="E.g. your camera's companion app. Only counts while the screen is on." />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+                                <TextView style="@style/Body" android:text="A Bluetooth device is connected" />
+                                <TextView android:id="@+id/tvTriggerBt" style="@style/HelperText" android:text="None chosen" />
+                            </LinearLayout>
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnPickBt"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Choose" />
+                        </LinearLayout>
+                        <TextView style="@style/HelperText"
+                            android:text="Cameras that link to the phone for remote control or location keep this connection while you shoot, even with the screen off." />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Field"
+                            android:layout_marginTop="16dp"
+                            android:hint="Keep logging after triggers clear"
+                            app:suffixText="s">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etLinger"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:maxLines="1" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
+                    <LinearLayout style="@style/CardBody">
+                        <TextView style="@style/SectionTitle" android:text="Matching photos" />
+                        <TextView style="@style/HelperText"
+                            android:text="Photos are matched to logged phone data by the camera's capture time." />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Field"
+                            android:hint="Max gap to a logged reading"
+                            app:suffixText="s">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etGap"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:maxLines="1" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Field"
+                            android:hint="Camera clock offset (camera minus phone)"
+                            app:suffixText="s">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etClockOffset"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="numberSigned"
+                                android:maxLines="1" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                        <TextView android:id="@+id/tvPhoneClock" style="@style/HelperText"
+                            android:text="Phone time: --:--:--" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/swRequireMatch"
+                            style="@style/Toggle"
+                            android:layout_marginTop="12dp"
+                            android:text="Only stamp photos covered by logged data" />
+                        <TextView style="@style/HelperText"
+                            android:text="Leave on so downloads and old pictures are never stamped by mistake." />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Field"
+                            android:hint="Only folders containing (optional)"
+                            app:placeholderText="e.g. Camera">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etBucket"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="text"
+                                android:maxLines="1" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
+                    <LinearLayout style="@style/CardBody">
+                        <TextView style="@style/SectionTitle" android:text="Weather and QNH" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/swMetar"
+                            style="@style/Toggle"
+                            android:text="Fetch METAR from the nearest airport" />
+                        <TextView style="@style/HelperText"
+                            android:text="Gives QNH for barometric elevation, plus the weather fields. Reports over 75 minutes from the photo are never used." />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Field"
+                            android:hint="Manual QNH (only if no METAR)">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etQnh"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="numberDecimal"
+                                android:maxLines="1" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButtonToggleGroup
+                            android:id="@+id/tgQnhUnit"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            app:selectionRequired="true"
+                            app:singleSelection="true">
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnHpa"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="hPa" />
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnInhg"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="inHg" />
+                        </com.google.android.material.button.MaterialButtonToggleGroup>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <!-- ================================ STAMP ================================ -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/pageStamp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="24dp">
+
+                <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp" android:layout_marginTop="4dp">
+                    <LinearLayout style="@style/CardBody" android:padding="0dp">
+                        <ImageView
+                            android:id="@+id/ivPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:adjustViewBounds="true"
+                            android:background="@color/preview_bg"
+                            android:contentDescription="Stamp preview"
+                            android:scaleType="fitCenter" />
+                        <ImageView
+                            android:id="@+id/ivPreviewZoom"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:adjustViewBounds="true"
+                            android:contentDescription="Close-up of the stamp"
+                            android:scaleType="fitCenter" />
+                        <TextView
+                            android:id="@+id/tvPreviewNote"
+                            style="@style/HelperText"
+                            android:paddingStart="16dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="16dp"
+                            android:paddingBottom="12dp"
+                            android:text="Preview with sample data" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
+                    <LinearLayout style="@style/CardBody">
+                        <TextView style="@style/SectionTitle" android:text="Look" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:paddingTop="8dp">
+                            <TextView
+                                style="@style/Body"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:text="Size" />
+                            <TextView
+                                android:id="@+id/tvSizeValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="100%"
+                                android:textAppearance="?attr/textAppearanceLabelLarge" />
+                        </LinearLayout>
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/sliderSize"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:stepSize="5"
+                            app:tickVisible="false"
+                            android:value="100"
+                            android:valueFrom="50"
+                            android:valueTo="200" />
+
+                        <com.google.android.material.textfield.TextInputLayout android:id="@+id/ddFont" style="@style/Dropdown" android:hint="Font">
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputLayout android:id="@+id/ddCorner" style="@style/Dropdown" android:hint="Position">
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputLayout android:id="@+id/ddBackdrop" style="@style/Dropdown" android:hint="Background">
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/swBold"
+                            style="@style/Toggle"
+                            android:layout_marginTop="10dp"
+                            android:text="Bold text" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
+                    <LinearLayout style="@style/CardBody">
+                        <TextView style="@style/SectionTitle" android:text="What to show" />
+
+                        <TextView style="@style/SubHeader" android:paddingTop="6dp" android:text="Date and time" />
+                        <CheckBox android:id="@+id/cbDateTime" style="@style/Check" android:text="Date and time" />
+                        <LinearLayout android:id="@+id/grpDateTime" android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:orientation="vertical" style="@style/Indented">
+                            <com.google.android.material.textfield.TextInputLayout android:id="@+id/ddDateStyle" style="@style/Dropdown" android:hint="Date format">
+                                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                    android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                            </com.google.android.material.textfield.TextInputLayout>
+                            <com.google.android.material.textfield.TextInputLayout android:id="@+id/ddTz" style="@style/Dropdown" android:hint="Time zone">
+                                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                    android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                            </com.google.android.material.textfield.TextInputLayout>
+                            <CheckBox android:id="@+id/cbHour12" style="@style/Check" android:text="12-hour clock" />
+                            <CheckBox android:id="@+id/cbSeconds" style="@style/Check" android:text="Seconds" />
+                        </LinearLayout>
+
+                        <TextView style="@style/SubHeader" android:text="Position" />
+                        <CheckBox android:id="@+id/cbCoords" style="@style/Check" android:text="Coordinates" />
+                        <com.google.android.material.textfield.TextInputLayout android:id="@+id/ddCoordFmt" style="@style/Dropdown"
+                            android:layout_marginStart="32dp" android:hint="Coordinate format">
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                        <CheckBox android:id="@+id/cbElevation" style="@style/Check" android:text="Elevation (barometric, MSL)" />
+                        <CheckBox android:id="@+id/cbDensityAlt" style="@style/Check" android:text="Density altitude" />
+                        <CheckBox android:id="@+id/cbQnh" style="@style/Check" android:text="QNH and airport (small print)" />
+
+                        <TextView style="@style/SubHeader" android:text="Motion and orientation" />
+                        <CheckBox android:id="@+id/cbSpeed" style="@style/Check" android:text="Ground speed (GPS)" />
+                        <com.google.android.material.textfield.TextInputLayout android:id="@+id/ddSpeedUnit" style="@style/Dropdown"
+                            android:layout_marginStart="32dp" android:hint="Speed unit">
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                        <CheckBox android:id="@+id/cbHeading" style="@style/Check" android:text="Compass heading (camera only)" />
+                        <CheckBox android:id="@+id/cbAttitude" style="@style/Check" android:text="Pitch / roll / yaw (camera only)" />
+
+                        <TextView style="@style/SubHeader" android:text="Weather (METAR)" />
+                        <CheckBox android:id="@+id/cbTemp" style="@style/Check" android:text="Temperature" />
+                        <CheckBox android:id="@+id/cbTempF" style="@style/Check" android:layout_marginStart="32dp" android:text="Fahrenheit" />
+                        <CheckBox android:id="@+id/cbDewpoint" style="@style/Check" android:text="Dew point" />
+                        <CheckBox android:id="@+id/cbHumidity" style="@style/Check" android:text="Relative humidity" />
+                        <CheckBox android:id="@+id/cbWind" style="@style/Check" android:text="Wind" />
+                        <com.google.android.material.textfield.TextInputLayout android:id="@+id/ddWindUnit" style="@style/Dropdown"
+                            android:layout_marginStart="32dp" android:hint="Wind unit">
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="none" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                        <CheckBox android:id="@+id/cbVisibility" style="@style/Check" android:text="Visibility" />
+                        <CheckBox android:id="@+id/cbClouds" style="@style/Check" android:text="Cloud cover" />
+
+                        <TextView style="@style/HelperText" android:paddingTop="12dp"
+                            android:text="Heading and pitch/roll/yaw come only from the camera's own metadata. Any field without real data is left off." />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView style="@style/Card.PhotoStamp">
+                    <LinearLayout style="@style/CardBody">
+                        <TextView style="@style/SectionTitle" android:text="Saving" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/swReplace"
+                            style="@style/Toggle"
+                            android:text="Replace originals" />
+                        <TextView style="@style/HelperText"
+                            android:text="Off: a stamped copy (name_stamped.jpg) is saved next to each photo. On: JPEGs are overwritten in place, which needs All-files access." />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/swMetaMetar"
+                            style="@style/Toggle"
+                            android:layout_marginTop="12dp"
+                            android:text="Save the full METAR in the photo's metadata" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:menu="@menu/bottom_nav" />
 </LinearLayout>

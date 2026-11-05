@@ -8,10 +8,12 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.provider.MediaStore
 import androidx.exifinterface.media.ExifInterface
 import kotlin.math.ceil
@@ -21,10 +23,17 @@ import java.io.FileOutputStream
 
 object Stamper {
 
-    /** User-controlled stamp appearance. sizeScale 1.0 = default size. */
-    data class StampStyle(val fontIndex: Int, val bold: Boolean, val sizeScale: Float)
+    /** User-controlled stamp appearance. sizeScale 1.0 = default size.
+     *  corner: 0 bottom-right, 1 bottom-left, 2 top-right, 3 top-left.
+     *  backdrop: 0 text shadow only, 1 translucent dark panel. */
+    data class StampStyle(
+        val fontIndex: Int, val bold: Boolean, val sizeScale: Float,
+        val corner: Int = 0, val backdrop: Int = 0,
+    )
 
     val FONT_LABELS = listOf("Monospace", "Sans-serif", "Serif", "Condensed")
+    val CORNER_LABELS = listOf("Bottom right", "Bottom left", "Top right", "Top left")
+    val BACKDROP_LABELS = listOf("Shadow", "Dark panel")
 
     private fun typefaceFor(style: StampStyle): Typeface {
         val base = when (style.fontIndex) {
@@ -41,9 +50,10 @@ object Stamper {
      * source is preserved, then our additions (GPS, UserComment) are written.
      *
      * If [replaceOriginal] and [originalPath] is set, the original file is
-     * overwritten in place (needs All-files access). Otherwise a *_stamped.jpg
-     * is written into [destRelativePath] (the source's folder). Returns the
-     * resulting Uri, or null on failure.
+     * overwritten in place (JPEG only, needs All-files access). Otherwise a
+     * *_stamped.jpg is written into [destRelativePath] (the source's folder),
+     * falling back to Pictures/PhotoStamp if that folder can't take it. Returns
+     * the resulting Uri, or null on failure.
      *
      * Note: maker notes (manufacturer-proprietary) are not carried by ExifInterface and
      * cannot survive a re-encode; standard EXIF tags are preserved.
@@ -51,9 +61,7 @@ object Stamper {
     fun stamp(
         ctx: Context,
         src: Uri,
-        mainLines: List<String>,
-        weatherParts: List<String>,
-        microLine: String?,
+        text: StampText,
         lat: Double?,
         lon: Double?,
         altM: Double?,
@@ -62,6 +70,7 @@ object Stamper {
         userComment: String?,
         replaceOriginal: Boolean,
         originalPath: String?,
+        mime: String,
         style: StampStyle,
     ): Uri? {
         val resolver = ctx.contentResolver
@@ -82,8 +91,9 @@ object Stamper {
         } ?: return null
         val upright = applyOrientation(decoded, orientation)
         if (upright !== decoded) decoded.recycle()
-        val canvasBmp = if (upright.isMutable) upright else upright.copy(Bitmap.Config.ARGB_8888, true)
-        drawOverlay(canvasBmp, mainLines, weatherParts, microLine, style)
+        val canvasBmp = if (upright.isMutable) upright
+            else upright.copy(Bitmap.Config.ARGB_8888, true).also { upright.recycle() }
+        drawOverlay(canvasBmp, text, style)
 
         val jpeg = ByteArrayOutputStream().also {
             canvasBmp.compress(Bitmap.CompressFormat.JPEG, 100, it)
@@ -91,28 +101,46 @@ object Stamper {
         canvasBmp.recycle()
 
         // --- write bytes + EXIF ---
-        return if (replaceOriginal && !originalPath.isNullOrBlank()) {
+        val canReplace = replaceOriginal && !originalPath.isNullOrBlank() && mime == "image/jpeg" &&
+            (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager())
+        if (replaceOriginal && !canReplace)
+            AppLog.log("Can't replace $origName in place; saving a stamped copy instead.")
+        if (canReplace) {
             try {
-                FileOutputStream(originalPath).use { it.write(jpeg) }
+                FileOutputStream(originalPath!!).use { it.write(jpeg) }
                 val ex = ExifInterface(originalPath)
                 applyExif(ex, srcAttrs, lat, lon, altM, userComment)
                 MediaScannerConnection.scanFile(ctx, arrayOf(originalPath), arrayOf("image/jpeg"), null)
-                src
-            } catch (e: Exception) { null }
-        } else {
-            val outName = origName.substringBeforeLast('.') + "_stamped.jpg"
-            val values = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, outName)
-                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.Images.Media.RELATIVE_PATH,
-                        destRelativePath?.takeIf { it.isNotBlank() } ?: "Pictures/PhotoStamp")
-                    put(MediaStore.Images.Media.IS_PENDING, 1)
-                }
+                return src
+            } catch (e: Exception) {
+                AppLog.log("Replace failed (${e.javaClass.simpleName}); saving a copy instead.")
             }
-            val outUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-                ?: return null
-            resolver.openOutputStream(outUri)?.use { it.write(jpeg) } ?: return null
+        }
+        val outName = origName.substringBeforeLast('.') + "_stamped.jpg"
+        val folder = destRelativePath?.takeIf { it.isNotBlank() }
+        return writeCopy(ctx, jpeg, outName, folder, srcAttrs, lat, lon, altM, userComment)
+            ?: if (folder != null) writeCopy(ctx, jpeg, outName, null, srcAttrs, lat, lon, altM, userComment)
+            else null
+    }
+
+    private fun writeCopy(
+        ctx: Context, jpeg: ByteArray, outName: String, relPath: String?,
+        srcAttrs: Map<String, String>, lat: Double?, lon: Double?, altM: Double?, userComment: String?,
+    ): Uri? {
+        val resolver = ctx.contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, outName)
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, relPath ?: "Pictures/PhotoStamp")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+            }
+        }
+        val outUri = runCatching {
+            resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+        }.getOrNull() ?: return null
+        return try {
+            resolver.openOutputStream(outUri)?.use { it.write(jpeg) } ?: throw IllegalStateException("no stream")
             try {
                 resolver.openFileDescriptor(outUri, "rw")?.use {
                     applyExif(ExifInterface(it.fileDescriptor), srcAttrs, lat, lon, altM, userComment)
@@ -123,6 +151,9 @@ object Stamper {
                 resolver.update(outUri, values, null, null)
             }
             outUri
+        } catch (e: Exception) {
+            runCatching { resolver.delete(outUri, null, null) }
+            null
         }
     }
 
@@ -160,14 +191,15 @@ object Stamper {
         setShadowLayer(maxOf(1.2f, px * 0.12f), 0f, 0f, Color.argb(200, 0, 0, 0))
     }
 
-    private fun drawOverlay(
-        bmp: Bitmap, mainLines: List<String>, weatherParts: List<String>, microLine: String?,
-        style: StampStyle,
-    ) {
+    /** Draws the stamp onto [bmp] exactly as it appears on photos (used by the preview). */
+    fun drawOverlay(bmp: Bitmap, text: StampText, style: StampStyle) {
+        val mainLines = text.lines; val weatherParts = text.weather; val microLine = text.micro
         val w = bmp.width
         val canvas = Canvas(bmp)
-        val mainPx = maxOf(11f, w / 170f) * style.sizeScale
-        val microPx = maxOf(8f, w / 360f) * style.sizeScale
+        // Size from the short side, so portrait and landscape shots match.
+        val ref = minOf(w, bmp.height) * 1.5f
+        val mainPx = maxOf(11f, ref / 170f) * style.sizeScale
+        val microPx = maxOf(8f, ref / 360f) * style.sizeScale
         val margin = mainPx * 0.9f
         val lineGap = 1.3f
 
@@ -190,11 +222,24 @@ object Stamper {
         if (items.isEmpty()) return
 
         val blockHeight = items.fold(0f) { acc, l -> acc + l.px * lineGap }
-        val rightEdge = w - margin
-        var top = bmp.height - margin - blockHeight
+        val blockWidth = items.maxOf { it.paint.measureText(it.text) }
+        val right = style.corner == 0 || style.corner == 2
+        val bottom = style.corner == 0 || style.corner == 1
+        val pad = mainPx * 0.6f
+        val inset = margin + if (style.backdrop == 1) pad else 0f
+        var top = if (bottom) bmp.height - inset - blockHeight else inset
+
+        if (style.backdrop == 1) {
+            val left = if (right) w - inset - blockWidth else inset
+            val panel = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(140, 0, 0, 0) }
+            canvas.drawRoundRect(
+                RectF(left - pad, top - pad * 0.6f, left + blockWidth + pad, top + blockHeight + pad * 0.4f),
+                pad, pad, panel,
+            )
+        }
         for (l in items) {
             val baseline = top + l.px
-            val x = rightEdge - l.paint.measureText(l.text)
+            val x = if (right) w - inset - l.paint.measureText(l.text) else inset
             canvas.drawText(l.text, x, baseline, l.paint)
             top += l.px * lineGap
         }

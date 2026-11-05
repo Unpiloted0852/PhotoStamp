@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/nav_status" android:icon="@drawable/ic_nav_status" android:title="Status" />
+    <item android:id="@+id/nav_triggers" android:icon="@drawable/ic_nav_triggers" android:title="Triggers" />
+    <item android:id="@+id/nav_stamp" android:icon="@drawable/ic_nav_stamp" android:title="Stamp" />
+</menu>
