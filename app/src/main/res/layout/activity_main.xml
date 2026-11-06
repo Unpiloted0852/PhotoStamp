@@ -205,7 +205,7 @@
                             android:layout_marginTop="12dp"
                             android:text="The phone camera opens" />
                         <TextView style="@style/HelperText"
-                            android:text="Any camera app. Face unlock is ignored." />
+                            android:text="Any camera app. Face unlock is ignored. For the camera opened from the lock screen to count, also grant Usage access." />
 
                         <LinearLayout
                             android:layout_width="match_parent"

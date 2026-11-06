@@ -20,7 +20,9 @@ the phone later (e.g. through the camera maker's Wi-Fi/Bluetooth app).
   the logging notification.
 - **Automatically** (auto-start on): logging starts when any trigger is active
   and stops by itself once they have all cleared for the linger time:
-  - the **phone camera opens** (any camera app; face unlock is ignored),
+  - the **phone camera opens** (any camera app). Camera use while the phone is
+    locked is ignored, so face unlock never triggers; the camera opened from the
+    lock screen still counts when Usage access is granted,
   - a chosen **app is in front**, e.g. the camera's companion app (needs Usage
     access; only while the screen is on),
   - a chosen **Bluetooth device is connected**, e.g. a camera that links to the

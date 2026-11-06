@@ -2,6 +2,7 @@ package com.photostamp.app
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -57,8 +58,8 @@ class WatchService : Service() {
     private var cameraManager: CameraManager? = null
     private var camCallback: CameraManager.AvailabilityCallback? = null
     private val unavailableCams = HashSet<String>()
-    private val frontCams = HashSet<String>()
-    @Volatile private var frontBusySince = 0L
+    private val backCams = HashSet<String>()
+    @Volatile private var otherBusySince = 0L
     private val camCheckRunnable = Runnable { evaluate() }
 
     private val fgTracker by lazy { ForegroundAppMonitor.Tracker(this) }
@@ -100,13 +101,15 @@ class WatchService : Service() {
 
     // ---- camera ------------------------------------------------------------
 
-    /** Note which cameras are front-facing (the ones face unlock uses). */
+    /** Note which cameras face the back (or are external): only those mean a photo for sure. */
     private fun classifyCameras() {
         val cm = cameraManager ?: return
         runCatching {
             for (id in cm.cameraIdList) {
                 val facing = cm.getCameraCharacteristics(id).get(CameraCharacteristics.LENS_FACING)
-                if (facing == CameraCharacteristics.LENS_FACING_FRONT) frontCams.add(id)
+                if (facing == CameraCharacteristics.LENS_FACING_BACK ||
+                    facing == CameraCharacteristics.LENS_FACING_EXTERNAL
+                ) backCams.add(id)
             }
         }
     }
@@ -115,23 +118,23 @@ class WatchService : Service() {
         val cm = cameraManager ?: return
         val cb = object : CameraManager.AvailabilityCallback() {
             override fun onCameraUnavailable(cameraId: String) {
-                val isFront = cameraId in frontCams
+                val isBack = cameraId in backCams
                 synchronized(lock) {
                     unavailableCams.add(cameraId)
-                    if (isFront && frontBusySince == 0L) frontBusySince = SystemClock.elapsedRealtime()
+                    if (!isBack && otherBusySince == 0L) otherBusySince = SystemClock.elapsedRealtime()
                 }
-                if (isFront) {
-                    // Front camera (face unlock / selfie): confirm only after the debounce.
+                if (!isBack) {
+                    // Front or unlisted camera (selfie, or face unlock on a hidden camera id):
+                    // confirm only after the debounce.
                     handler.removeCallbacks(camCheckRunnable)
                     handler.postDelayed(camCheckRunnable, CAMERA_DEBOUNCE_MS)
                 }
-                // Back/main camera = a real photo attempt: evaluate now, triggers instantly.
                 evaluate()
             }
             override fun onCameraAvailable(cameraId: String) {
                 synchronized(lock) {
                     unavailableCams.remove(cameraId)
-                    if (unavailableCams.none { it in frontCams }) frontBusySince = 0L
+                    if (unavailableCams.all { it in backCams }) otherBusySince = 0L
                 }
                 evaluate()
             }
@@ -143,12 +146,15 @@ class WatchService : Service() {
     private fun cameraActive(): Boolean {
         if (!prefs.triggerCamera) return false
         if (camAppInFront) return true   // camera app in front (poll path) = photo intent
+        // Face unlock only runs on the lock screen, so camera use while locked is ignored.
+        // The lock-screen camera app is still caught by the poll path above.
+        if (getSystemService(KeyguardManager::class.java)?.isKeyguardLocked == true) return false
         return synchronized(lock) {
-            // A back/main (non-front) camera in use = real photo intent => immediate.
-            if (unavailableCams.any { it !in frontCams }) return@synchronized true
-            // Only front cameras in use: require the debounce so face unlock is ignored.
-            unavailableCams.isNotEmpty() && frontBusySince != 0L &&
-                SystemClock.elapsedRealtime() - frontBusySince >= CAMERA_DEBOUNCE_MS
+            // A back/main camera in use = real photo intent => immediate.
+            if (unavailableCams.any { it in backCams }) return@synchronized true
+            // Only front/unlisted cameras in use: require the debounce.
+            unavailableCams.isNotEmpty() && otherBusySince != 0L &&
+                SystemClock.elapsedRealtime() - otherBusySince >= CAMERA_DEBOUNCE_MS
         }
     }
 

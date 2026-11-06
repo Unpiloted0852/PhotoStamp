@@ -339,7 +339,7 @@ class MainActivity : AppCompatActivity() {
         if (prefs.autoStartEnabled && (prefs.triggerApps.isNotEmpty() || prefs.triggerCamera)) {
             val needed = prefs.triggerApps.isNotEmpty()
             out += Check("Usage access",
-                if (needed) "Needed to see which app is in front." else "Also spots the camera app directly.",
+                if (needed) "Needed to see which app is in front." else "Lets the camera opened from the lock screen count.",
                 ForegroundAppMonitor.hasUsageAccess(this), needed) {
                 runCatching { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
             }
